@@ -4148,3 +4148,25 @@ whichever one you pick.
   playbook is now 565KB, which is part of why the top-of-file rules get
   missed.
 - **P2 (runner quota split): still PROPOSED, low urgency.**
+
+## 2026-10-10 07:5xZ - operator machine geo-blocked by Polymarket gamma (HTTP 451)
+
+- **Evidence:** the 07:46Z FULL on the operator machine got `HTTP Error
+  451: Unavailable For Legal Reasons` on all 4 discovery queries
+  (`liquid-multiday`, `by-liquidity`, `active-today`, `econ-tag`; 3 tries
+  each, scan-stderr.txt), so 0 candidates and `screen.py prepare` had
+  nothing to screen. `core/resolve.py` ran 25 min with no output and no
+  file writes (presumably retrying the same blocked host), and I stopped
+  it so the cycle could finish inside the lease. The cloud runner's
+  06:15Z FULL scanned 1081 markets normally, so the block is specific to
+  this machine's current network egress (a VPN/region change?), not
+  Polymarket-wide.
+- **Ask (operator act, environment):** restore a non-blocked egress for
+  the operator machine before the next `loop.sh` run, or pause local
+  runs. While it lasts, every local tick spends its lease on dead
+  retries, and `--real` cycles could not quote or place.
+- **Ask (protected code, lower priority):** `resolve.py` and `scan.py`
+  could treat 451 as non-retryable and fail fast with a loud message.
+  Retrying a legal block cannot succeed, and the silent 25-min hang ate
+  most of the 50-min lease.
+  Status: PROPOSED.
